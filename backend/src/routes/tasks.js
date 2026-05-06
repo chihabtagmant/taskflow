@@ -2,14 +2,44 @@ const express = require("express");
 const router = express.Router();
 const Task = require("../models/Task");
 
-// GET toutes les tâches d'un projet
+// GET toutes les tâches d'un projet avec filtrage, recherche et pagination
 router.get("/projects/:id/tasks", async (req, res) => {
   try {
-    const tasks = await Task.find({ project: req.params.id }).populate(
-      "assignedTo",
-      "name email",
-    );
-    res.json(tasks);
+    // on commence avec le projet obligatoire
+    const filtre = { project: req.params.id };
+
+    // filtre par statut si présent
+    if (req.query.status) filtre.status = req.query.status;
+
+    // filtre par priorité si présent
+    if (req.query.priority) filtre.priority = req.query.priority;
+
+    // filtre par membre assigné si présent
+    if (req.query.assignedTo) filtre.assignedTo = req.query.assignedTo;
+
+    // recherche par mot-clé dans title ou description
+    if (req.query.search) {
+      filtre.$or = [
+        { title:       { $regex: req.query.search, $options: "i" } },
+        { description: { $regex: req.query.search, $options: "i" } }
+      ];
+    }
+
+    // pagination
+    const page = Math.max(parseInt(req.query.page) || 1, 1);
+    const limit = Math.max(parseInt(req.query.limit) || 10, 1);
+    const skip  = (page - 1) * limit;
+
+    const total      = await Task.countDocuments(filtre);
+    const tasks      = await Task.find(filtre)
+                                 .populate("assignedTo", "fullName email")
+                                 .skip(skip)
+                                 .limit(limit);
+    const totalPages = Math.ceil(total / limit);
+
+    // le PDF oblige de renvoyer exactement ça
+    res.json({ data: tasks, total, page, totalPages });
+
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
