@@ -83,5 +83,18 @@ router.get("/projects/:id/members", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
+// GET tasks assigned to logged-in user (dashboard)
+router.get("/my-tasks", async (req, res) => {
+  try {
+    const tasks = await Task.find({
+      assignedTo: req.user.id, // membre connecté
+      project: req.query.projectId, // projet spécifique
+    })
+      .populate("assignedTo", "name email")
+      .sort({ priority: -1 }); // ترتيب حسب priority
+    res.json(tasks);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 module.exports = router;
