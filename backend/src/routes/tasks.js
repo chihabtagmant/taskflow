@@ -70,5 +70,18 @@ router.patch("/tasks/:id/status", async (req, res) => {
     res.status(400).json({ message: err.message });
   }
 });
+// GET membres d'un projet pour le dropdown
+router.get("/projects/:id/members", async (req, res) => {
+  try {
+    const Project = require("../models/Project");
+    const project = await Project.findById(req.params.id).populate(
+      "members",
+      "name email",
+    );
+    res.json(project.members);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 module.exports = router;
