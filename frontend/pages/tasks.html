@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>TaskFlow — Tâches</title>
+</head>
+<body>
+    <h1>Gestion des Tâches</h1>
+
+    <!-- Formulaire créer une tâche -->
+    <form id="taskForm">
+        <input type="text" id="title" placeholder="Titre de la tâche" required />
+        
+        <select id="priority">
+            <option value="basse">Basse</option>
+            <option value="moyenne">Moyenne</option>
+            <option value="haute">Haute</option>
+        </select>
+
+        <select id="status">
+            <option value="à faire">À faire</option>
+            <option value="en cours">En cours</option>
+            <option value="terminé">Terminé</option>
+        </select>
+
+        <!-- Dropdown membres — Fonctionnalité 4 -->
+        <select id="assignedTo">
+            <option value="">Assigner à un membre</option>
+        </select>
+
+        <button type="submit">Créer la tâche</button>
+    </form>
+
+    <!-- Liste des tâches -->
+    <div id="tasksList"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="../js/tasks.js"></script>
+</body>
+</html>
