@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow - Inscription</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 50px; }
+    form { max-width: 400px; }
+    input { 
+      width: 100%; 
+      padding: 10px; 
+      margin: 8px 0; 
+      box-sizing: border-box; 
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover { background: #0056b3; }
+  </style>
+</head>
+<body>
+  <h2>Créer un compte TaskFlow</h2>
+  
+  <form id="registerForm">
+    <input 
+      type="text" 
+      id="fullName" 
+      name="fullName" 
+      autocomplete="name"
+      placeholder="Nom complet" 
+      required
+    ><br>
+    
+    <input 
+      type="email" 
+      id="email" 
+      name="email" 
+      autocomplete="email"
+      placeholder="Email" 
+      required
+    ><br>
+    
+    <input 
+      type="password" 
+      id="password" 
+      name="password" 
+      autocomplete="new-password"
+      placeholder="Mot de passe (minimum 6 caractères)" 
+      required
+    ><br><br>
+    
+    <button type="submit">S'inscrire</button>
+  </form>
+
+  <p>Déjà un compte ? <a href="login.html">Se connecter</a></p>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="../js/auth.js"></script>
+</body>
+</html>
