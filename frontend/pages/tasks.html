@@ -30,7 +30,29 @@
 
         <button type="submit">Créer la tâche</button>
     </form>
+   <input id="searchInput" type="text" placeholder="Rechercher une tâche">
 
+<select id="statusFilter">
+  <option value="">Tous les statuts</option>
+  <option value="à faire">À faire</option>
+  <option value="en cours">En cours</option>
+  <option value="terminé">Terminé</option>
+</select>
+
+<select id="priorityFilter">
+  <option value="">Toutes les priorités</option>
+  <option value="basse">Basse</option>
+  <option value="moyenne">Moyenne</option>
+  <option value="haute">Haute</option>
+</select>
+
+<select id="assignedToFilter">
+  <option value="">Tous les membres</option>
+</select>
+
+<button id="prevPage">Précédent</button>
+<span id="pageInfo">Page 1</span>
+<button id="nextPage">Suivant</button>
     <!-- Liste des tâches -->
     <div id="tasksList"></div>
 
