@@ -7,18 +7,22 @@ router.get("/projects/:id/tasks", async (req, res) => {
   try {
     const filtre = { project: req.params.id };
 
+    // Filtre par statut
     if (req.query.status) {
       filtre.status = req.query.status;
     }
 
+    // Filtre par priorité
     if (req.query.priority) {
       filtre.priority = req.query.priority;
     }
 
+    // Filtre par membre assigné
     if (req.query.assignedTo) {
       filtre.assignedTo = req.query.assignedTo;
     }
 
+    // Recherche dans le titre ou la description
     if (req.query.search) {
       filtre.$or = [
         { title: { $regex: req.query.search, $options: "i" } },
@@ -26,6 +30,7 @@ router.get("/projects/:id/tasks", async (req, res) => {
       ];
     }
 
+    // Pagination
     const page = Math.max(parseInt(req.query.page) || 1, 1);
     const limit = Math.max(parseInt(req.query.limit) || 10, 1);
     const skip = (page - 1) * limit;
@@ -50,7 +55,6 @@ router.get("/projects/:id/tasks", async (req, res) => {
     res.status(500).json({ message: err.message });
   }
 });
-
 // POST créer une tâche
 router.post("/tasks", async (req, res) => {
   try {
