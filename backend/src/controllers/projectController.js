@@ -104,3 +104,60 @@ export const deleteProject = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+// Invite member by email
+export const inviteMember = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const projectId = req.params.id;
+
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    // Only owner can invite
+    if (!project.owner.equals(req.user.id)) {
+      return res.status(403).json({ message: 'Only the project owner can invite members' });
+    }
+
+    const userToInvite = await User.findOne({ email: email.toLowerCase() });
+    if (!userToInvite) {
+      return res.status(404).json({ message: 'No user found with this email' });
+    }
+
+    // Prevent duplicate
+    if (project.members.includes(userToInvite._id) || project.owner.equals(userToInvite._id)) {
+      return res.status(400).json({ message: 'User is already a member of this project' });
+    }
+
+    project.members.push(userToInvite._id);
+    await project.save();
+
+    res.json({ 
+      message: `${userToInvite.fullName} has been added to the project`,
+      project 
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// Remove member
+export const removeMember = async (req, res) => {
+  try {
+    const projectId = req.params.id;
+    const userIdToRemove = req.params.userId;
+
+    const project = await Project.findById(projectId);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    if (!project.owner.equals(req.user.id)) {
+      return res.status(403).json({ message: 'Only the project owner can remove members' });
+    }
+
+    project.members = project.members.filter(id => !id.equals(userIdToRemove));
+    await project.save();
+
+    res.json({ message: 'Member removed successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
