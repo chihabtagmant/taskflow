@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow - Mes Projets</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+    header { background: #007bff; color: white; padding: 15px; display: flex; justify-content: space-between; }
+    .container { max-width: 1200px; margin: 20px auto; }
+    .card {
+      border: 1px solid #ddd;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 8px;
+      background: #f9f9f9;
+    }
+    form { margin: 15px 0; padding: 15px; background: #f0f0f0; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TaskFlow</h1>
+    <div>
+      <span id="userName"></span>
+      <button onclick="logout()">Déconnexion</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <h2>Mes Projets</h2>
+
+    <!-- Create Project Form -->
+    <form id="createProjectForm">
+      <h3>Créer un nouveau projet</h3>
+      <input type="text" id="title" placeholder="Titre du projet" required><br><br>
+      <textarea id="description" placeholder="Description" rows="3"></textarea><br><br>
+      <input type="date" id="dueDate"><br><br>
+      <button type="submit">Créer le Projet</button>
+    </form>
+
+    <!-- Projects List -->
+    <div id="projectsList"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/projects.js"></script>
+</body>
+</html>
