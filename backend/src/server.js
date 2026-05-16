@@ -2,8 +2,11 @@ import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './config/db.js';
+
 import authRoutes from './routes/authRoutes.js';
-import dashboardRoutes from './routes/dashboardRoutes.js';
+import projectRoutes from './routes/projectRoutes.js';     // ← Must be imported
+import taskRoutes from './routes/taskRoutes.js';           // ← Optional for now
+import dashboardRoutes from './routes/dashboardRoutes.js'; // ← Optional
 
 dotenv.config();
 
@@ -15,7 +18,10 @@ app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api', dashboardRoutes);
+app.use('/api', taskRoutes);
+app.use('/api/projects', projectRoutes);      // ← This line was probably missing
+app.use('/api', taskRoutes);                  // For tasks
+app.use('/api', dashboardRoutes);             // For dashboard
 
 // Health check
 app.get('/', (req, res) => res.send('TaskFlow API is running...'));
