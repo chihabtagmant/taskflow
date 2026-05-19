@@ -6,8 +6,8 @@ import {
   getProjectById,
   updateProject,
   deleteProject,
-  inviteMember,      // new
-  removeMember       // new
+  inviteMember,
+  removeMember
 } from '../controllers/projectController.js';
 
 const router = express.Router();
@@ -23,7 +23,6 @@ router.route('/:id')
   .put(updateProject)
   .delete(deleteProject);
 
-// New routes for members
 router.post('/:id/invite', inviteMember);
 router.delete('/:id/members/:userId', removeMember);
 

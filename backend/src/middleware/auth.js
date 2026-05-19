@@ -19,9 +19,3 @@ export const protect = (req, res, next) => {
     return res.status(401).json({ message: 'Not authorized, token failed' });
   }
 };
-
-const logout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  window.location.href = 'login.html';
-};
