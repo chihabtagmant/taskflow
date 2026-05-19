@@ -1,5 +1,6 @@
 const token = localStorage.getItem("token");
 const projectId = new URLSearchParams(window.location.search).get("projectId");
+const draftKey = `taskDraft_${projectId}`;
 
 let currentPage = 1;
 let totalPages = 1;
@@ -111,6 +112,44 @@ async function loadTasks() {
     pageInfo.textContent = `Page ${res.data.page} / ${totalPages}`;
   }
 }
+// Sauvegarder automatiquement le brouillon
+function saveDraft() {
+  const draft = {
+    title: document.getElementById("title").value,
+    priority: document.getElementById("priority").value,
+    status: document.getElementById("status").value,
+    assignedTo: document.getElementById("assignedTo").value,
+  };
+
+  localStorage.setItem(draftKey, JSON.stringify(draft));
+}
+
+// Restaurer le brouillon au chargement
+function restoreDraft() {
+  const savedDraft = localStorage.getItem(draftKey);
+
+  if (!savedDraft) {
+    return;
+  }
+
+  const shouldRestore = confirm("Un brouillon existe. Voulez-vous le restaurer ?");
+
+  if (!shouldRestore) {
+    localStorage.removeItem(draftKey);
+    return;
+  }
+
+  const draft = JSON.parse(savedDraft);
+
+  document.getElementById("title").value = draft.title || "";
+  document.getElementById("priority").value = draft.priority || "";
+  document.getElementById("status").value = draft.status || "";
+  document.getElementById("assignedTo").value = draft.assignedTo || "";
+}
+
+document.getElementById("taskForm").addEventListener("input", () => {
+  saveDraft();
+});
 
 // Créer une tâche
 document.getElementById("taskForm").addEventListener("submit", async (e) => {
@@ -129,7 +168,7 @@ document.getElementById("taskForm").addEventListener("submit", async (e) => {
       headers: { Authorization: `Bearer ${token}` },
     }
   );
-
+  localStorage.removeItem(draftKey);
   document.getElementById("taskForm").reset();
 
   currentPage = 1;
@@ -199,3 +238,4 @@ document.getElementById("nextPage")?.addEventListener("click", () => {
 // Lancer au chargement
 loadMembers();
 loadTasks();
+restoreDraft();
