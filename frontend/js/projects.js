@@ -18,8 +18,7 @@ async function loadProjects() {
     displayProjects(res.data.data);
   } catch (err) {
     console.error(err);
-    document.getElementById('projectsList').innerHTML = `
-      <p class="text-red-500 text-center py-10">Erreur lors du chargement des projets.</p>`;
+    document.getElementById('projectsList').innerHTML = `<p class="text-red-500 text-center py-10">Erreur de chargement des projets.</p>`;
   }
 }
 
@@ -39,12 +38,7 @@ function displayProjects(projects) {
 
     html += `
       <div class="card bg-white rounded-3xl shadow p-6">
-        <div class="flex justify-between">
-          <h3 class="text-xl font-semibold">${project.title}</h3>
-          <span class="px-4 py-1 text-xs font-medium rounded-full ${project.status === 'actif' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">
-            ${project.status}
-          </span>
-        </div>
+        <h3 class="text-xl font-semibold">${project.title}</h3>
         <p class="text-gray-600 mt-3 line-clamp-2">${project.description || 'Aucune description'}</p>
         
         <div class="mt-6 text-sm text-gray-500">
@@ -52,29 +46,28 @@ function displayProjects(projects) {
           <p>Membres : ${project.members.length + 1}</p>
         </div>
 
-        <div class="mt-8 flex gap-3">
+        <div class="mt-8 grid grid-cols-3 gap-3">
           <button onclick="viewTasks('${project._id}')" 
-                  class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl font-medium transition">
-            Voir Tâches
+                  class="col-span-1 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-medium text-sm">
+            Tâches
           </button>
-          
+          <button onclick="viewActivities('${project._id}')" 
+                  class="col-span-1 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl font-medium text-sm">
+            Activités
+          </button>
           ${isOwner ? `
             <button onclick="toggleInviteForm('${project._id}')" 
-                    class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-2xl font-medium transition">
+                    class="col-span-1 py-3 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-medium text-sm">
               Inviter
             </button>
           ` : ''}
         </div>
 
+        <!-- Invite Form -->
         <div id="invite-form-${project._id}" class="hidden mt-6 pt-6 border-t">
           <div class="flex gap-3">
-            <input type="email" id="email-${project._id}" 
-                   class="flex-1 px-5 py-3 border rounded-2xl focus:outline-none focus:border-blue-500" 
-                   placeholder="Email du membre">
-            <button onclick="inviteMember('${project._id}')" 
-                    class="px-8 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-medium">
-              Inviter
-            </button>
+            <input type="email" id="email-${project._id}" class="flex-1 px-5 py-3 border rounded-2xl" placeholder="Email du membre">
+            <button onclick="inviteMember('${project._id}')" class="px-8 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-medium">Inviter</button>
           </div>
         </div>
       </div>
@@ -84,19 +77,17 @@ function displayProjects(projects) {
   container.innerHTML = html;
 }
 
-// Toggle Create Form
+// ====================== FUNCTIONS ======================
 function toggleCreateForm() {
   const form = document.getElementById('createProjectForm');
   form.classList.toggle('hidden');
 }
 
-// Toggle Invite Form
 function toggleInviteForm(projectId) {
   const form = document.getElementById(`invite-form-${projectId}`);
   form.classList.toggle('hidden');
 }
 
-// Invite Member
 async function inviteMember(projectId) {
   const email = document.getElementById(`email-${projectId}`).value.trim();
   if (!email) return alert("Veuillez entrer un email");
@@ -116,12 +107,16 @@ function viewTasks(projectId) {
   window.location.href = `tasks.html?projectId=${projectId}`;
 }
 
-// Create Project
+function viewActivities(projectId) {
+  window.location.href = `activities.html?projectId=${projectId}`;
+}
+
+// Create Project Form
 document.getElementById('createProjectForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const data = {
-    title: document.getElementById('title').value,
-    description: document.getElementById('description').value,
+    title: document.getElementById('title').value.trim(),
+    description: document.getElementById('description').value.trim(),
     dueDate: document.getElementById('dueDate').value || null
   };
 

@@ -1,3 +1,4 @@
+import User from '../models/User.js';
 import Project from '../models/Project.js';
 
 // @desc    Create new project
@@ -113,7 +114,6 @@ export const inviteMember = async (req, res) => {
     const project = await Project.findById(projectId);
     if (!project) return res.status(404).json({ message: 'Project not found' });
 
-    // Only owner can invite
     if (!project.owner.equals(req.user.id)) {
       return res.status(403).json({ message: 'Only the project owner can invite members' });
     }
@@ -123,22 +123,23 @@ export const inviteMember = async (req, res) => {
       return res.status(404).json({ message: 'No user found with this email' });
     }
 
-    // Prevent duplicate
     if (project.members.includes(userToInvite._id) || project.owner.equals(userToInvite._id)) {
-      return res.status(400).json({ message: 'User is already a member of this project' });
+      return res.status(400).json({ message: 'User is already a member' });
     }
 
     project.members.push(userToInvite._id);
     await project.save();
 
     res.json({ 
-      message: `${userToInvite.fullName} has been added to the project`,
+      message: `${userToInvite.fullName} has been added successfully`,
       project 
     });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: error.message });
   }
 };
+
 
 // Remove member
 export const removeMember = async (req, res) => {

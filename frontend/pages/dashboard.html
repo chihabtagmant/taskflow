@@ -28,18 +28,30 @@
   </style>
 </head>
 <body class="bg-gray-50 min-h-screen">
-  <header class="bg-white shadow-sm border-b">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-      <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">TaskFlow</h1>
-      <div class="flex items-center gap-4">
-        <span id="userName" class="font-medium text-gray-700"></span>
-        <button onclick="logout()" 
-                class="btn px-5 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-2xl font-medium transition">
-          Déconnexion
-        </button>
-      </div>
+  <header class="bg-white shadow-sm border-b sticky top-0 z-50">
+  <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center gap-8">
+      <h1 onclick="window.location.href='dashboard.html'" 
+          class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80">
+        TaskFlow
+      </h1>
+      
+      <nav class="flex gap-6 text-sm font-medium">
+        <a href="dashboard.html" class="nav-link text-gray-700 hover:text-blue-600">Dashboard</a>
+        <a href="projects.html" class="nav-link text-gray-700 hover:text-blue-600">Projets</a>
+        <a href="tasks.html?projectId=YOUR_PROJECT_ID_HERE" class="nav-link text-gray-700 hover:text-blue-600">Tâches</a>
+      </nav>
     </div>
-  </header>
+
+    <div class="flex items-center gap-4">
+      <span id="userName" class="font-medium text-gray-700"></span>
+      <button onclick="logout()" 
+              class="px-5 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-2xl font-medium transition">
+        Déconnexion
+      </button>
+    </div>
+  </div>
+</header>
 
   <div class="max-w-7xl mx-auto px-6 py-8">
     <h2 class="text-3xl font-semibold mb-8">Bonjour, <span id="welcomeName" class="text-blue-600"></span> 👋</h2>

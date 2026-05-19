@@ -18,47 +18,29 @@
     <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
       <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">TaskFlow</h1>
       <div class="flex items-center gap-4">
-        <span id="userName" class="font-medium text-gray-700"></span>
-        <button onclick="logout()" 
-                class="px-5 py-2.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-2xl font-medium transition-all">
-          Déconnexion
-        </button>
+        <span id="userName" class="font-medium"></span>
+        <button onclick="logout()" class="px-5 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-2xl font-medium">Déconnexion</button>
       </div>
     </div>
   </header>
 
   <div class="max-w-7xl mx-auto px-6 py-10">
     <div class="flex justify-between items-center mb-10">
-      <h2 class="text-4xl font-semibold text-gray-800">Mes Projets</h2>
+      <h2 class="text-4xl font-semibold">Mes Projets</h2>
       <button onclick="toggleCreateForm()" 
               class="btn flex items-center gap-3 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3.5 rounded-2xl font-semibold shadow-lg">
-        <i class="fas fa-plus"></i> 
-        Nouveau Projet
+        <i class="fas fa-plus"></i> Nouveau Projet
       </button>
     </div>
 
-    <!-- Create Project Form -->
+    <!-- Create Form -->
     <form id="createProjectForm" class="hidden bg-white p-8 rounded-3xl shadow-xl mb-12">
-      <h3 class="text-2xl font-semibold mb-6">Créer un nouveau projet</h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label class="block text-sm font-medium mb-2">Titre du projet</label>
-          <input type="text" id="title" class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500" required>
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-2">Date limite</label>
-          <input type="date" id="dueDate" class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500">
-        </div>
-      </div>
-      <div class="mt-6">
-        <label class="block text-sm font-medium mb-2">Description</label>
-        <textarea id="description" rows="4" class="w-full px-5 py-4 border border-gray-300 rounded-2xl focus:outline-none focus:border-blue-500" placeholder="Décrivez le projet..."></textarea>
-      </div>
-      <div class="flex gap-4 mt-8">
-        <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-semibold">Créer le Projet</button>
-        <button type="button" onclick="toggleCreateForm()" class="flex-1 bg-gray-200 hover:bg-gray-300 py-4 rounded-2xl font-semibold">Annuler</button>
-      </div>
-    </form>
+  <h3 class="text-2xl font-semibold mb-6">Créer un nouveau projet</h3>
+  <input type="text" id="title" placeholder="Titre du projet" class="w-full px-5 py-4 border rounded-2xl mb-4" required>
+  <textarea id="description" placeholder="Description du projet" rows="3" class="w-full px-5 py-4 border rounded-2xl mb-4"></textarea>
+  <input type="date" id="dueDate" class="w-full px-5 py-4 border rounded-2xl">
+  <button type="submit" class="mt-6 w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-2xl font-semibold">Créer le Projet</button>
+</form>
 
     <!-- Projects Grid -->
     <div id="projectsList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"></div>

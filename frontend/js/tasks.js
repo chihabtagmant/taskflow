@@ -3,7 +3,7 @@ let projectMembers = [];
 let currentPage = 1;
 let notifications = [];
 
-// ====================== AUTH & INIT ======================
+// ====================== AUTH ======================
 function checkAuth() {
   if (!localStorage.getItem('token')) {
     window.location.href = 'login.html';
@@ -268,6 +268,7 @@ async function deleteTask(taskId) {
 }
 
 function applyFilters() { loadTasks(1); }
+
 function resetFilters() {
   document.getElementById('searchInput').value = '';
   document.getElementById('statusFilter').value = '';

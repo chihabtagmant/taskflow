@@ -3,72 +3,51 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TaskFlow - Activités</title>
-  <link rel="stylesheet" href="../css/style.css">
+  <title>TaskFlow - Historique des Activités</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 28px;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: linear-gradient(to bottom, #3b82f6, #6366f1);
+    }
+  </style>
 </head>
-<body>
-
-  <!-- NAVBAR -->
-  <nav style="background:#2c3e50; padding:12px 24px; display:flex; justify-content:space-between; align-items:center; position:relative;">
-    <span style="color:white; font-size:20px; font-weight:bold;">TaskFlow</span>
-    <div style="display:flex; align-items:center; gap:16px;">
-      <a href="dashboard.html" style="color:white; text-decoration:none;">Dashboard</a>
-      <a href="projects.html" style="color:white; text-decoration:none;">Projets</a>
-      <!-- NOTIFICATION BELL -->
-      <div id="notif-container" style="position:relative; cursor:pointer;" onclick="toggleNotifPanel()">
-        <span style="color:white; font-size:20px;">🔔</span>
-        <span id="notif-badge" style="
-          display:none;
-          position:absolute;
-          top:-6px; right:-6px;
-          background:red; color:white;
-          border-radius:50%;
-          width:18px; height:18px;
-          font-size:11px;
-          text-align:center; line-height:18px;
-        ">0</span>
+<body class="bg-gray-50 min-h-screen">
+  <header class="bg-white shadow-sm border-b sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-6 py-5 flex justify-between items-center">
+      <div class="flex items-center gap-4">
+        <button onclick="window.location.href='projects.html'" class="text-gray-500 hover:text-gray-700">
+          <i class="fas fa-arrow-left text-2xl"></i>
+        </button>
+        <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">TaskFlow</h1>
       </div>
-      <!-- NOTIFICATION PANEL -->
-      <div id="notif-panel" style="
-        display:none;
-        position:absolute;
-        top:50px; right:24px;
-        width:320px;
-        background:white;
-        border:1px solid #ddd;
-        border-radius:8px;
-        box-shadow:0 4px 12px rgba(0,0,0,0.15);
-        z-index:1000;
-        max-height:400px;
-        overflow-y:auto;
-      ">
-        <p style="padding:12px; font-weight:bold; border-bottom:1px solid #eee; margin:0;">Notifications</p>
-        <ul id="notif-list" style="list-style:none; padding:0; margin:0;"></ul>
+      <div class="flex items-center gap-4">
+        <span id="userName" class="font-medium"></span>
+        <button onclick="logout()" class="px-5 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-2xl font-medium">Déconnexion</button>
       </div>
-      <button onclick="logout()" style="background:#e74c3c; color:white; border:none; padding:8px 16px; border-radius:6px; cursor:pointer;">Déconnexion</button>
     </div>
-  </nav>
+  </header>
 
-  <!-- MAIN CONTENT -->
-  <div style="max-width:800px; margin:40px auto; padding:0 20px;">
-    <h2>Historique des activités</h2>
+  <div class="max-w-4xl mx-auto px-6 py-10">
+    <h2 class="text-4xl font-semibold mb-2">Historique des Activités</h2>
+    <p class="text-gray-600 mb-10" id="projectName">Projet en cours de chargement...</p>
 
-    <!-- Project selector -->
-    <div style="margin-bottom:20px;">
-      <label style="font-weight:bold;">Choisir un projet :</label>
-      <select id="project-select" onchange="loadActivities()" style="margin-left:10px; padding:8px; border-radius:6px; border:1px solid #ddd;">
-        <option value="">-- Sélectionner un projet --</option>
-      </select>
+    <div id="activityFeed" class="timeline relative pl-16 space-y-8">
+      <!-- Filled by JavaScript -->
     </div>
-
-    <!-- Activity list -->
-    <ul id="activity-list" style="list-style:none; padding:0;">
-      <li style="color:gray;">Sélectionnez un projet pour voir ses activités.</li>
-    </ul>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="../js/auth.js"></script>
   <script src="../js/activities.js"></script>
-  <script src="../js/notifications.js"></script>
 </body>
 </html>

@@ -1,121 +1,97 @@
-const token = localStorage.getItem('token');
+let currentProjectId = null;
 
-// Redirect to login if not logged in
-if (!token) {
-  window.location.href = '../pages/Login.html';
+document.addEventListener('DOMContentLoaded', () => {
+  checkAuth();
+  getProjectIdFromUrl();
+  loadActivities();
+});
+
+function checkAuth() {
+  if (!localStorage.getItem('token')) {
+    window.location.href = 'login.html';
+  }
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  document.getElementById('userName').textContent = user.fullName || 'Utilisateur';
 }
 
-// ── HELPER: "il y a 2 heures" ─────────────────────────────────
-function timeAgo(date) {
-  const seconds = Math.floor((new Date() - new Date(date)) / 1000);
-  if (seconds < 60) return 'à l\'instant';
-  if (seconds < 3600) return `il y a ${Math.floor(seconds / 60)} minutes`;
-  if (seconds < 86400) return `il y a ${Math.floor(seconds / 3600)} heures`;
-  return `il y a ${Math.floor(seconds / 86400)} jours`;
-}
-
-// ── HELPER: human readable activity text ──────────────────────
-function formatActivity(activity) {
-  const who = activity.user?.name || 'Quelqu\'un';
-  const when = timeAgo(activity.createdAt);
-  const d = activity.details || {};
-
-  switch (activity.actionType) {
-    case 'task_created':
-      return `${who} a créé la tâche "${d.taskTitle || ''}" — ${when}`;
-    case 'task_deleted':
-      return `${who} a supprimé la tâche "${d.taskTitle || ''}" — ${when}`;
-    case 'status_changed':
-      return `${who} a changé le statut de "${d.taskTitle || ''}" à ${d.newStatus || ''} — ${when}`;
-    case 'member_added':
-      return `${who} a ajouté un membre au projet — ${when}`;
-    case 'member_removed':
-      return `${who} a retiré un membre du projet — ${when}`;
-    case 'project_updated':
-      return `${who} a modifié le projet — ${when}`;
-    default:
-      return `${who} a effectué une action — ${when}`;
+function getProjectIdFromUrl() {
+  const urlParams = new URLSearchParams(window.location.search);
+  currentProjectId = urlParams.get('projectId');
+  if (!currentProjectId) {
+    alert("Aucun projet sélectionné");
+    window.location.href = 'projects.html';
   }
 }
 
-// ── LOAD PROJECTS into the dropdown ───────────────────────────
-async function loadProjects() {
-  try {
-    const res = await axios.get('/api/projects', {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-
-    const select = document.getElementById('project-select');
-    const projects = res.data.data || res.data;
-
-    projects.forEach(project => {
-      const option = document.createElement('option');
-      option.value = project._id;
-      option.textContent = project.title;
-      select.appendChild(option);
-    });
-
-  } catch (err) {
-    console.error('Erreur chargement projets:', err);
-  }
-}
-
-// ── LOAD ACTIVITIES for selected project ──────────────────────
 async function loadActivities() {
-  const projectId = document.getElementById('project-select').value;
-  const list = document.getElementById('activity-list');
+  try {
+    const res = await axios.get(`http://localhost:5000/api/projects/${currentProjectId}/activities`);
+    displayTimeline(res.data);
+  } catch (err) {
+    console.error(err);
+    document.getElementById('activityFeed').innerHTML = `
+      <p class="text-red-500 text-center py-10">Impossible de charger l'historique.</p>`;
+  }
+}
 
-  if (!projectId) {
-    list.innerHTML = '<li style="color:gray;">Sélectionnez un projet pour voir ses activités.</li>';
+function displayTimeline(activities) {
+  const container = document.getElementById('activityFeed');
+  
+  if (activities.length === 0) {
+    container.innerHTML = `
+      <div class="text-center py-20 text-gray-500">
+        <i class="fas fa-clock text-6xl mb-4"></i>
+        <p>Aucune activité pour le moment</p>
+      </div>`;
     return;
   }
 
-  list.innerHTML = '<li style="color:gray;">Chargement...</li>';
+  let html = '';
 
-  try {
-    const res = await axios.get(`/api/projects/${projectId}/activities`, {
-      headers: { Authorization: `Bearer ${token}` }
+  activities.forEach((activity, index) => {
+    const time = new Date(activity.createdAt).toLocaleString('fr-FR', {
+      day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
     });
 
-    const activities = res.data;
+    const icon = getActivityIcon(activity.action);
 
-    if (activities.length === 0) {
-      list.innerHTML = '<li style="color:gray;">Aucune activité pour ce projet.</li>';
-      return;
-    }
+    html += `
+      <div class="relative flex gap-6">
+        <div class="absolute left-[-2px] top-8 w-[4px] h-full bg-gradient-to-b from-blue-500 to-indigo-500"></div>
+        
+        <div class="w-14 h-14 flex-shrink-0 ${icon.bg} rounded-2xl flex items-center justify-center text-3xl shadow-md z-10">
+          ${icon.emoji}
+        </div>
+        
+        <div class="flex-1 bg-white rounded-3xl shadow p-6">
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="font-semibold">${activity.user.fullName}</p>
+              <p class="text-gray-700 mt-1">${activity.description}</p>
+            </div>
+            <span class="text-xs text-gray-500 whitespace-nowrap">${time}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  });
 
-    list.innerHTML = activities.map(a => `
-      <li style="
-        padding:14px;
-        border-bottom:1px solid #eee;
-        display:flex;
-        align-items:center;
-        gap:12px;
-      ">
-        <span style="font-size:20px;">📌</span>
-        <span>${formatActivity(a)}</span>
-      </li>
-    `).join('');
+  container.innerHTML = html;
+}
 
-  } catch (err) {
-    list.innerHTML = '<li style="color:red;">Erreur lors du chargement des activités.</li>';
-    console.error(err);
+function getActivityIcon(action) {
+  switch(action) {
+    case 'task_created': return { emoji: '📋', bg: 'bg-blue-500 text-white' };
+    case 'task_status_changed': return { emoji: '🔄', bg: 'bg-amber-500 text-white' };
+    case 'task_deleted': return { emoji: '🗑️', bg: 'bg-red-500 text-white' };
+    case 'member_added': return { emoji: '👤', bg: 'bg-green-500 text-white' };
+    case 'member_removed': return { emoji: '🚪', bg: 'bg-orange-500 text-white' };
+    default: return { emoji: '📌', bg: 'bg-gray-500 text-white' };
   }
 }
 
-// ── LOGOUT ────────────────────────────────────────────────────
-function logout() {
+window.logout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
-  window.location.href = '../index.html';
-}
-
-// ── NOTIFICATION BELL ─────────────────────────────────────────
-function toggleNotifPanel() {
-  const panel = document.getElementById('notif-panel');
-  if (!panel) return;
-  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-}
-
-// ── START ──────────────────────────────────────────────────────
-loadProjects();
+  window.location.href = 'login.html';
+};
