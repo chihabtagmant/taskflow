@@ -1,8 +1,9 @@
 let currentProjectId = null;
 let projectMembers = [];
 let currentPage = 1;
+let notifications = [];
 
-// Check authentication
+// ====================== AUTH & INIT ======================
 function checkAuth() {
   if (!localStorage.getItem('token')) {
     window.location.href = 'login.html';
@@ -19,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadTasks();
   loadActivities();
   setupAutoSave();
+  startNotificationPolling();
 });
 
 function getProjectIdFromUrl() {
@@ -30,7 +32,7 @@ function getProjectIdFromUrl() {
   }
 }
 
-// ====================== PROJECT MEMBERS ======================
+// ====================== MEMBERS ======================
 async function loadProjectMembers() {
   try {
     const res = await axios.get(`http://localhost:5000/api/projects/${currentProjectId}/members`);
@@ -40,7 +42,7 @@ async function loadProjectMembers() {
   }
 }
 
-// ====================== LOAD TASKS (with filters) ======================
+// ====================== TASKS ======================
 async function loadTasks(page = 1) {
   currentPage = page;
   const search = document.getElementById('searchInput')?.value || '';
@@ -57,7 +59,7 @@ async function loadTasks(page = 1) {
     displayTasks(res.data.data);
   } catch (err) {
     console.error(err);
-    document.getElementById('tasksList').innerHTML = `<p class="text-red-500">Erreur de chargement.</p>`;
+    document.getElementById('tasksList').innerHTML = `<p class="text-red-500 text-center py-8">Erreur de chargement.</p>`;
   }
 }
 
@@ -69,7 +71,6 @@ function displayTasks(tasks) {
   }
 
   let html = '';
-
   tasks.forEach(task => {
     const dueDate = task.dueDate ? new Date(task.dueDate).toLocaleDateString('fr-FR') : '—';
     const assignedName = task.assignedTo ? task.assignedTo.fullName : 'Non assigné';
@@ -111,48 +112,71 @@ function displayTasks(tasks) {
   container.innerHTML = html;
 }
 
-// ====================== ACTIVITY FEED (Fonctionnalité 9) ======================
-async function loadActivities() {
+// ====================== NOTIFICATIONS ======================
+function toggleNotifications() {
+  const panel = document.getElementById('notificationPanel');
+  panel.classList.toggle('hidden');
+  if (!panel.classList.contains('hidden')) loadNotifications();
+}
+
+async function loadNotifications() {
   try {
-    const res = await axios.get(`http://localhost:5000/api/projects/${currentProjectId}/activities`);
-    displayActivities(res.data);
+    const res = await axios.get('http://localhost:5000/api/notifications');
+    notifications = res.data;
+    displayNotifications(notifications);
+    updateBadge();
   } catch (err) {
     console.error(err);
   }
 }
 
-function displayActivities(activities) {
-  const container = document.getElementById('activityFeed');
+function displayNotifications(notifs) {
+  const container = document.getElementById('notificationsList');
   if (!container) return;
-  
-  if (activities.length === 0) {
-    container.innerHTML = `<p class="text-gray-500 text-center py-8">Aucune activité récente.</p>`;
+  if (notifs.length === 0) {
+    container.innerHTML = `<p class="text-gray-500 text-center py-6">Aucune notification</p>`;
     return;
   }
-
   let html = '';
-  activities.forEach(activity => {
-    const time = new Date(activity.createdAt).toLocaleString('fr-FR', { 
-      hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' 
-    });
-
+  notifs.forEach(n => {
     html += `
-      <div class="bg-white p-5 rounded-2xl shadow flex gap-4">
-        <div class="w-9 h-9 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center flex-shrink-0">
-          <i class="fas fa-info"></i>
-        </div>
-        <div class="flex-1">
-          <p class="font-medium">${activity.user.fullName} ${activity.description}</p>
-          <p class="text-xs text-gray-500 mt-1">${time}</p>
-        </div>
+      <div onclick="markAsRead('${n._id}')" class="p-4 hover:bg-gray-50 rounded-2xl cursor-pointer ${n.isRead ? 'opacity-70' : 'bg-blue-50'}">
+        <p class="font-medium">${n.title}</p>
+        <p class="text-sm text-gray-600">${n.message}</p>
+        <p class="text-xs text-gray-500 mt-2">${new Date(n.createdAt).toLocaleString('fr-FR')}</p>
       </div>
     `;
   });
-
   container.innerHTML = html;
 }
 
-// ====================== AUTO SAVE DRAFT (Fonctionnalité 7) ======================
+async function markAsRead(id) {
+  try {
+    await axios.patch(`http://localhost:5000/api/notifications/${id}/read`);
+    loadNotifications();
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function updateBadge() {
+  const unread = notifications.filter(n => !n.isRead).length;
+  const badge = document.getElementById('notificationBadge');
+  if (unread > 0) {
+    badge.textContent = unread;
+    badge.classList.remove('hidden');
+  } else {
+    badge.classList.add('hidden');
+  }
+}
+
+function startNotificationPolling() {
+  setInterval(() => {
+    if (localStorage.getItem('token')) loadNotifications();
+  }, 30000);
+}
+
+// ====================== AUTO SAVE DRAFT ======================
 function setupAutoSave() {
   const form = document.getElementById('taskForm');
   if (!form) return;
@@ -190,10 +214,9 @@ function clearDraft() {
   localStorage.removeItem(`draft_${currentProjectId}`);
 }
 
-// ====================== FORM SUBMIT ======================
+// ====================== FORM & ACTIONS ======================
 document.getElementById('taskForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-
   const data = {
     title: document.getElementById('taskTitle').value.trim(),
     description: document.getElementById('taskDescription').value.trim(),
@@ -207,13 +230,12 @@ document.getElementById('taskForm').addEventListener('submit', async (e) => {
     e.target.reset();
     clearDraft();
     loadTasks();
-    loadActivities(); // Refresh activity feed
+    loadActivities();
   } catch (err) {
     alert(err.response?.data?.message || 'Erreur lors de la création');
   }
 });
 
-// ====================== OTHER FUNCTIONS ======================
 async function updateStatus(taskId, status) {
   try {
     await axios.patch(`http://localhost:5000/api/tasks/${taskId}/status`, { status });
@@ -245,15 +267,48 @@ async function deleteTask(taskId) {
   }
 }
 
-function applyFilters() {
-  loadTasks(1);
-}
-
+function applyFilters() { loadTasks(1); }
 function resetFilters() {
   document.getElementById('searchInput').value = '';
   document.getElementById('statusFilter').value = '';
   document.getElementById('priorityFilter').value = '';
   loadTasks(1);
+}
+
+// ====================== ACTIVITY FEED ======================
+async function loadActivities() {
+  try {
+    const res = await axios.get(`http://localhost:5000/api/projects/${currentProjectId}/activities`);
+    displayActivities(res.data);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function displayActivities(activities) {
+  const container = document.getElementById('activityFeed');
+  if (!container) return;
+  if (activities.length === 0) {
+    container.innerHTML = `<p class="text-gray-500 text-center py-8">Aucune activité récente.</p>`;
+    return;
+  }
+
+  let html = '';
+  activities.forEach(activity => {
+    const time = new Date(activity.createdAt).toLocaleString('fr-FR', { hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' });
+    html += `
+      <div class="bg-white p-5 rounded-2xl shadow flex gap-4">
+        <div class="w-9 h-9 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-info"></i>
+        </div>
+        <div class="flex-1">
+          <p class="font-medium">${activity.user.fullName} ${activity.description}</p>
+          <p class="text-xs text-gray-500 mt-1">${time}</p>
+        </div>
+      </div>
+    `;
+  });
+  container.innerHTML = html;
 }
 
 window.logout = () => {
