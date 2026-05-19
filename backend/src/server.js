@@ -9,6 +9,7 @@ import taskRoutes from './routes/taskRoutes.js';           // ← Optional for n
 import dashboardRoutes from './routes/dashboardRoutes.js'; // ← Optional
 import activitiesRouter from './routes/activities.js';
 import notificationsRouter from './routes/notifications.js';
+import activityRoutes from './routes/activityRoutes.js';
 
 dotenv.config();
 
@@ -22,9 +23,10 @@ app.use(express.json());
 app.use('/api', notificationsRouter);
 app.use('/api/auth', authRoutes);
 app.use('/api', taskRoutes);
-app.use('/api/projects', projectRoutes);      // ← This line was probably missing
-app.use('/api', taskRoutes);                  // For tasks
-app.use('/api', dashboardRoutes);             // For dashboard
+app.use('/api/projects', projectRoutes);
+app.use('/api', taskRoutes);                  
+app.use('/api', dashboardRoutes);
+app.use('/api', activityRoutes);            
 
 // Health check
 app.get('/', (req, res) => res.send('TaskFlow API is running...'));
