@@ -4,12 +4,11 @@ import cors from 'cors';
 import connectDB from './config/db.js';
 
 import authRoutes from './routes/authRoutes.js';
-import projectRoutes from './routes/projectRoutes.js';     // ← Must be imported
-import taskRoutes from './routes/taskRoutes.js';           // ← Optional for now
-import dashboardRoutes from './routes/dashboardRoutes.js'; // ← Optional
-import activitiesRouter from './routes/activities.js';
-import notificationsRouter from './routes/notifications.js';
+import projectRoutes from './routes/projectRoutes.js';     
+import taskRoutes from './routes/taskRoutes.js';           
+import dashboardRoutes from './routes/dashboardRoutes.js'; 
 import activityRoutes from './routes/activityRoutes.js';
+import notificationRoutes from './routes/notificationRoutes.js';
 
 dotenv.config();
 
@@ -20,13 +19,13 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api', notificationsRouter);
 app.use('/api/auth', authRoutes);
 app.use('/api', taskRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api', taskRoutes);                  
 app.use('/api', dashboardRoutes);
-app.use('/api', activityRoutes);            
+app.use('/api', activityRoutes);
+app.use('/api', notificationRoutes);            
 
 // Health check
 app.get('/', (req, res) => res.send('TaskFlow API is running...'));
