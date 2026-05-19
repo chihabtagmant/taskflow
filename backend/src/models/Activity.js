@@ -1,18 +1,6 @@
 import mongoose from 'mongoose';
 
 const activitySchema = new mongoose.Schema({
-  actionType: {
-    type: String,
-    required: true,
-    enum: [
-      'task_created',
-      'task_deleted',
-      'status_changed',
-      'member_added',
-      'member_removed',
-      'project_updated'
-    ]
-  },
   project: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Project',
@@ -23,10 +11,21 @@ const activitySchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  details: {
-    type: Object,
-    default: {}
+  action: {
+    type: String,
+    required: true,
+    enum: ['task_created', 'task_updated', 'task_status_changed', 'task_deleted', 
+           'member_added', 'member_removed', 'project_updated']
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  entityId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: false
   }
 }, { timestamps: true });
 
-export default mongoose.model('Activity', activitySchema);
+const Activity = mongoose.model('Activity', activitySchema);
+export default Activity;

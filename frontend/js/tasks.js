@@ -1,7 +1,5 @@
-const token = localStorage.getItem("token");
-const projectId = new URLSearchParams(window.location.search).get("projectId");
-const draftKey = `taskDraft_${projectId}`;
-
+let currentProjectId = null;
+let projectMembers = [];
 let currentPage = 1;
 
 // Check authentication
@@ -19,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   getProjectIdFromUrl();
   loadProjectMembers();
   loadTasks();
+  loadActivities();
   setupAutoSave();
 });
 
@@ -31,7 +30,7 @@ function getProjectIdFromUrl() {
   }
 }
 
-// ====================== LOAD PROJECT MEMBERS ======================
+// ====================== PROJECT MEMBERS ======================
 async function loadProjectMembers() {
   try {
     const res = await axios.get(`http://localhost:5000/api/projects/${currentProjectId}/members`);
@@ -41,7 +40,7 @@ async function loadProjectMembers() {
   }
 }
 
-// ====================== LOAD TASKS WITH FILTERS ======================
+// ====================== LOAD TASKS (with filters) ======================
 async function loadTasks(page = 1) {
   currentPage = page;
   const search = document.getElementById('searchInput')?.value || '';
@@ -58,7 +57,7 @@ async function loadTasks(page = 1) {
     displayTasks(res.data.data);
   } catch (err) {
     console.error(err);
-    document.getElementById('tasksList').innerHTML = `<p class="text-red-500">Erreur de chargement des tâches.</p>`;
+    document.getElementById('tasksList').innerHTML = `<p class="text-red-500">Erreur de chargement.</p>`;
   }
 }
 
@@ -90,7 +89,7 @@ function displayTasks(tasks) {
 
         <div class="mt-5">
           <strong class="text-sm">Assigné à :</strong>
-          <select onchange="assignTaskToUser('${task._id}', this.value)" class="ml-2 px-4 py-2 border rounded-xl">
+          <select onchange="assignTaskToUser('${task._id}', this.value)" class="ml-3 px-4 py-2 border rounded-xl focus:outline-none">
             <option value="">Non assigné</option>
             ${projectMembers.map(m => `
               <option value="${m._id}" ${task.assignedTo && task.assignedTo._id === m._id ? 'selected' : ''}>
@@ -111,72 +110,59 @@ function displayTasks(tasks) {
 
   container.innerHTML = html;
 }
-// Sauvegarder automatiquement le brouillon
-function saveDraft() {
-  const draft = {
-    title: document.getElementById("title").value,
-    priority: document.getElementById("priority").value,
-    status: document.getElementById("status").value,
-    assignedTo: document.getElementById("assignedTo").value,
-  };
 
-  localStorage.setItem(draftKey, JSON.stringify(draft));
+// ====================== ACTIVITY FEED (Fonctionnalité 9) ======================
+async function loadActivities() {
+  try {
+    const res = await axios.get(`http://localhost:5000/api/projects/${currentProjectId}/activities`);
+    displayActivities(res.data);
+  } catch (err) {
+    console.error(err);
+  }
 }
 
-// Restaurer le brouillon au chargement
-function restoreDraft() {
-  const savedDraft = localStorage.getItem(draftKey);
-
-  if (!savedDraft) {
+function displayActivities(activities) {
+  const container = document.getElementById('activityFeed');
+  if (!container) return;
+  
+  if (activities.length === 0) {
+    container.innerHTML = `<p class="text-gray-500 text-center py-8">Aucune activité récente.</p>`;
     return;
   }
 
-  const shouldRestore = confirm("Un brouillon existe. Voulez-vous le restaurer ?");
+  let html = '';
+  activities.forEach(activity => {
+    const time = new Date(activity.createdAt).toLocaleString('fr-FR', { 
+      hour: '2-digit', minute: '2-digit', day: 'numeric', month: 'short' 
+    });
 
-  if (!shouldRestore) {
-    localStorage.removeItem(draftKey);
-    return;
-  }
+    html += `
+      <div class="bg-white p-5 rounded-2xl shadow flex gap-4">
+        <div class="w-9 h-9 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center flex-shrink-0">
+          <i class="fas fa-info"></i>
+        </div>
+        <div class="flex-1">
+          <p class="font-medium">${activity.user.fullName} ${activity.description}</p>
+          <p class="text-xs text-gray-500 mt-1">${time}</p>
+        </div>
+      </div>
+    `;
+  });
 
-  const draft = JSON.parse(savedDraft);
-
-  document.getElementById("title").value = draft.title || "";
-  document.getElementById("priority").value = draft.priority || "";
-  document.getElementById("status").value = draft.status || "";
-  document.getElementById("assignedTo").value = draft.assignedTo || "";
+  container.innerHTML = html;
 }
 
-document.getElementById("taskForm").addEventListener("input", () => {
-  saveDraft();
-});
-
-// ====================== FILTERS ======================
-function applyFilters() {
-  loadTasks(1);
-}
-
-  await axios.post(
-    "http://localhost:5000/api/tasks",
-    {
-      title: document.getElementById("title").value,
-      priority: document.getElementById("priority").value,
-      status: document.getElementById("status").value,
-      assignedTo: document.getElementById("assignedTo").value,
-      project: projectId,
-    },
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
-  );
-  localStorage.removeItem(draftKey);
-  document.getElementById("taskForm").reset();
+// ====================== AUTO SAVE DRAFT (Fonctionnalité 7) ======================
+function setupAutoSave() {
+  const form = document.getElementById('taskForm');
+  if (!form) return;
 
   ['taskTitle', 'taskDescription', 'priority', 'taskDueDate'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', saveDraft);
   });
   loadDraft();
-
+}
 
 function saveDraft() {
   const draft = {
@@ -204,9 +190,10 @@ function clearDraft() {
   localStorage.removeItem(`draft_${currentProjectId}`);
 }
 
-// ====================== OTHER FUNCTIONS ======================
+// ====================== FORM SUBMIT ======================
 document.getElementById('taskForm').addEventListener('submit', async (e) => {
   e.preventDefault();
+
   const data = {
     title: document.getElementById('taskTitle').value.trim(),
     description: document.getElementById('taskDescription').value.trim(),
@@ -220,21 +207,57 @@ document.getElementById('taskForm').addEventListener('submit', async (e) => {
     e.target.reset();
     clearDraft();
     loadTasks();
+    loadActivities(); // Refresh activity feed
   } catch (err) {
     alert(err.response?.data?.message || 'Erreur lors de la création');
   }
 });
 
+// ====================== OTHER FUNCTIONS ======================
 async function updateStatus(taskId, status) {
   try {
     await axios.patch(`http://localhost:5000/api/tasks/${taskId}/status`, { status });
     loadTasks(currentPage);
+    loadActivities();
   } catch (err) {
     alert('Erreur lors de la mise à jour');
   }
 }
 
-// Lancer au chargement
-loadMembers();
-loadTasks();
-restoreDraft();
+async function assignTaskToUser(taskId, userId) {
+  try {
+    await axios.patch(`http://localhost:5000/api/tasks/${taskId}/assign`, { assignedTo: userId || null });
+    loadTasks(currentPage);
+    loadActivities();
+  } catch (err) {
+    alert("Erreur lors de l'assignation");
+  }
+}
+
+async function deleteTask(taskId) {
+  if (!confirm('Supprimer cette tâche ?')) return;
+  try {
+    await axios.delete(`http://localhost:5000/api/tasks/${taskId}`);
+    loadTasks(currentPage);
+    loadActivities();
+  } catch (err) {
+    alert('Erreur lors de la suppression');
+  }
+}
+
+function applyFilters() {
+  loadTasks(1);
+}
+
+function resetFilters() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('statusFilter').value = '';
+  document.getElementById('priorityFilter').value = '';
+  loadTasks(1);
+}
+
+window.logout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  window.location.href = 'login.html';
+};
