@@ -1,14 +1,5 @@
-const Activity = require('../models/Activity');
-const Notification = require('../models/Notification'); 
+import Activity from '../models/Activity.js';
 
-/**
- 
- * @param {Object} params
- * @param {string} params.actionType 
- * @param {string} params.projectId  
- * @param {string} params.userId     
- * @param {Object} params.details   
- */
 async function logActivity({ actionType, projectId, userId, details = {} }) {
   try {
     await Activity.create({
@@ -18,9 +9,8 @@ async function logActivity({ actionType, projectId, userId, details = {} }) {
       details
     });
   } catch (err) {
-  
     console.error('Failed to log activity:', err.message);
   }
 }
 
-module.exports = logActivity;
+export default logActivity;

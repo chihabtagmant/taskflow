@@ -1,7 +1,6 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const activitySchema = new mongoose.Schema({
- 
   actionType: {
     type: String,
     required: true,
@@ -14,26 +13,20 @@ const activitySchema = new mongoose.Schema({
       'project_updated'
     ]
   },
-
- 
   project: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Project',
     required: true
   },
-
-
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-
   details: {
     type: Object,
     default: {}
   }
+}, { timestamps: true });
 
-}, { timestamps: true }); 
-
-module.exports = mongoose.model('Activity', activitySchema);
+export default mongoose.model('Activity', activitySchema);
