@@ -3,37 +3,56 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>TaskFlow - Tableau de Bord</title>
+  <title>TaskFlow</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f4f6f9; }
-    header { background: #007bff; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
-    .stat-card {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      text-align: center;
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    
+    .card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .in-progress { margin-top: 30px; }
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+    }
+    
+    .btn {
+      transition: all 0.3s ease;
+    }
+    .btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    }
   </style>
 </head>
-<body>
-  <header>
-    <h1>TaskFlow</h1>
-    <div>
-      <span id="userName"></span>
-      <button onclick="logout()">Déconnexion</button>
+<body class="bg-gray-50 min-h-screen">
+  <header class="bg-white shadow-sm border-b">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">TaskFlow</h1>
+      <div class="flex items-center gap-4">
+        <span id="userName" class="font-medium text-gray-700"></span>
+        <button onclick="logout()" 
+                class="btn px-5 py-2 bg-red-100 hover:bg-red-200 text-red-700 rounded-2xl font-medium transition">
+          Déconnexion
+        </button>
+      </div>
     </div>
   </header>
 
-  <div class="container">
-    <h2>Tableau de Bord</h2>
-    <div class="stats" id="statsContainer"></div>
+  <div class="max-w-7xl mx-auto px-6 py-8">
+    <h2 class="text-3xl font-semibold mb-8">Bonjour, <span id="welcomeName" class="text-blue-600"></span> 👋</h2>
 
-    <div class="in-progress">
-      <h3>Tâches en cours</h3>
-      <div id="inProgressTasks"></div>
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="statsContainer"></div>
+
+    <!-- In Progress Tasks -->
+    <div class="mt-12">
+      <h3 class="text-2xl font-semibold mb-6 flex items-center gap-2">
+        <i class="fas fa-clock text-amber-500"></i> Tâches en cours
+      </h3>
+      <div id="inProgressTasks" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
     </div>
   </div>
 

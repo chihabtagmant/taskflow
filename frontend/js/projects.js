@@ -6,7 +6,10 @@ document.addEventListener('DOMContentLoaded', () => {
 function checkAuth() {
   if (!localStorage.getItem('token')) {
     window.location.href = 'login.html';
+    return;
   }
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  document.getElementById('userName').textContent = user.fullName || 'Utilisateur';
 }
 
 async function loadProjects() {
@@ -15,44 +18,64 @@ async function loadProjects() {
     displayProjects(res.data.data);
   } catch (err) {
     console.error(err);
-    document.getElementById('projectsList').innerHTML = '<p>Erreur de chargement.</p>';
+    document.getElementById('projectsList').innerHTML = `
+      <p class="text-red-500 text-center py-10">Erreur lors du chargement des projets.</p>`;
   }
 }
 
 function displayProjects(projects) {
   const container = document.getElementById('projectsList');
   if (projects.length === 0) {
-    container.innerHTML = '<p>Aucun projet. Créez-en un !</p>';
+    container.innerHTML = `<p class="text-center text-gray-500 py-12">Aucun projet trouvé. Créez votre premier projet !</p>`;
     return;
   }
 
   let html = '';
 
   projects.forEach(project => {
-    const isOwner = project.owner._id === JSON.parse(localStorage.getItem('user'))._id;
-    const dueDate = project.dueDate ? new Date(project.dueDate).toLocaleDateString('fr-FR') : '—';
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const isOwner = project.owner && project.owner._id === user._id;
+    const dueDate = project.dueDate ? new Date(project.dueDate).toLocaleDateString('fr-FR') : 'Sans date limite';
 
     html += `
-      <div class="card">
-        <h4>${project.title}</h4>
-        <p>${project.description || 'Aucune description'}</p>
-        <p><strong>Statut :</strong> ${project.status} | 
-           <strong>Date limite :</strong> ${dueDate}</p>
-        <p><strong>Membres :</strong> ${project.members.length + 1}</p>
+      <div class="card bg-white rounded-3xl shadow p-6">
+        <div class="flex justify-between">
+          <h3 class="text-xl font-semibold">${project.title}</h3>
+          <span class="px-4 py-1 text-xs font-medium rounded-full ${project.status === 'actif' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}">
+            ${project.status}
+          </span>
+        </div>
+        <p class="text-gray-600 mt-3 line-clamp-2">${project.description || 'Aucune description'}</p>
+        
+        <div class="mt-6 text-sm text-gray-500">
+          <p>Date limite : ${dueDate}</p>
+          <p>Membres : ${project.members.length + 1}</p>
+        </div>
 
-        <div style="margin-top: 10px;">
-          <button onclick="viewTasks('${project._id}')">Voir Tâches</button>
+        <div class="mt-8 flex gap-3">
+          <button onclick="viewTasks('${project._id}')" 
+                  class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-2xl font-medium transition">
+            Voir Tâches
+          </button>
           
           ${isOwner ? `
-            <button onclick="showInviteForm('${project._id}')">Inviter un membre</button>
-            <button onclick="deleteProject('${project._id}')" style="background:#dc3545;color:white;">Supprimer</button>
+            <button onclick="toggleInviteForm('${project._id}')" 
+                    class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3.5 rounded-2xl font-medium transition">
+              Inviter
+            </button>
           ` : ''}
         </div>
 
-        <!-- Invite Form (hidden initially) -->
-        <div id="invite-form-${project._id}" style="display:none; margin-top:10px;">
-          <input type="email" id="email-${project._id}" placeholder="Email du membre" />
-          <button onclick="inviteMember('${project._id}')">Inviter</button>
+        <div id="invite-form-${project._id}" class="hidden mt-6 pt-6 border-t">
+          <div class="flex gap-3">
+            <input type="email" id="email-${project._id}" 
+                   class="flex-1 px-5 py-3 border rounded-2xl focus:outline-none focus:border-blue-500" 
+                   placeholder="Email du membre">
+            <button onclick="inviteMember('${project._id}')" 
+                    class="px-8 bg-green-600 hover:bg-green-700 text-white rounded-2xl font-medium">
+              Inviter
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -61,43 +84,39 @@ function displayProjects(projects) {
   container.innerHTML = html;
 }
 
+// Toggle Create Form
+function toggleCreateForm() {
+  const form = document.getElementById('createProjectForm');
+  form.classList.toggle('hidden');
+}
+
+// Toggle Invite Form
+function toggleInviteForm(projectId) {
+  const form = document.getElementById(`invite-form-${projectId}`);
+  form.classList.toggle('hidden');
+}
+
 // Invite Member
 async function inviteMember(projectId) {
-  const email = document.getElementById(`email-${projectId}`).value;
+  const email = document.getElementById(`email-${projectId}`).value.trim();
   if (!email) return alert("Veuillez entrer un email");
 
   try {
     await axios.post(`http://localhost:5000/api/projects/${projectId}/invite`, { email });
     alert("✅ Membre invité avec succès !");
-    document.getElementById(`invite-form-${projectId}`).style.display = 'none';
-    loadProjects(); // Refresh
+    document.getElementById(`email-${projectId}`).value = '';
+    toggleInviteForm(projectId);
+    loadProjects();
   } catch (err) {
     alert(err.response?.data?.message || "Erreur lors de l'invitation");
   }
 }
 
-function showInviteForm(projectId) {
-  const form = document.getElementById(`invite-form-${projectId}`);
-  form.style.display = form.style.display === 'none' ? 'block' : 'none';
-}
-
-// View Tasks
 function viewTasks(projectId) {
   window.location.href = `tasks.html?projectId=${projectId}`;
 }
 
-// Delete Project
-async function deleteProject(projectId) {
-  if (!confirm("Supprimer ce projet et toutes ses tâches ?")) return;
-  try {
-    await axios.delete(`http://localhost:5000/api/projects/${projectId}`);
-    loadProjects();
-  } catch (err) {
-    alert("Erreur lors de la suppression");
-  }
-}
-
-// Create Project (same as before)
+// Create Project
 document.getElementById('createProjectForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const data = {
@@ -108,10 +127,17 @@ document.getElementById('createProjectForm').addEventListener('submit', async (e
 
   try {
     await axios.post('http://localhost:5000/api/projects', data);
-    alert('Projet créé !');
+    alert('🎉 Projet créé avec succès !');
     e.target.reset();
+    toggleCreateForm();
     loadProjects();
   } catch (err) {
-    alert('Erreur lors de la création');
+    alert(err.response?.data?.message || 'Erreur lors de la création');
   }
 });
+
+window.logout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  window.location.href = 'login.html';
+};
