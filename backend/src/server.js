@@ -7,6 +7,8 @@ import authRoutes from './routes/authRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';     // ← Must be imported
 import taskRoutes from './routes/taskRoutes.js';           // ← Optional for now
 import dashboardRoutes from './routes/dashboardRoutes.js'; // ← Optional
+import activitiesRouter from './routes/activities.js';
+import notificationsRouter from './routes/notifications.js';
 
 dotenv.config();
 
@@ -17,6 +19,7 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
+app.use('/api', notificationsRouter);
 app.use('/api/auth', authRoutes);
 app.use('/api', taskRoutes);
 app.use('/api/projects', projectRoutes);      // ← This line was probably missing

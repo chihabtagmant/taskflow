@@ -1,5 +1,7 @@
-let currentProjectId = null;
-let projectMembers = [];
+const token = localStorage.getItem("token");
+const projectId = new URLSearchParams(window.location.search).get("projectId");
+const draftKey = `taskDraft_${projectId}`;
+
 let currentPage = 1;
 
 // Check authentication
@@ -109,30 +111,72 @@ function displayTasks(tasks) {
 
   container.innerHTML = html;
 }
+// Sauvegarder automatiquement le brouillon
+function saveDraft() {
+  const draft = {
+    title: document.getElementById("title").value,
+    priority: document.getElementById("priority").value,
+    status: document.getElementById("status").value,
+    assignedTo: document.getElementById("assignedTo").value,
+  };
+
+  localStorage.setItem(draftKey, JSON.stringify(draft));
+}
+
+// Restaurer le brouillon au chargement
+function restoreDraft() {
+  const savedDraft = localStorage.getItem(draftKey);
+
+  if (!savedDraft) {
+    return;
+  }
+
+  const shouldRestore = confirm("Un brouillon existe. Voulez-vous le restaurer ?");
+
+  if (!shouldRestore) {
+    localStorage.removeItem(draftKey);
+    return;
+  }
+
+  const draft = JSON.parse(savedDraft);
+
+  document.getElementById("title").value = draft.title || "";
+  document.getElementById("priority").value = draft.priority || "";
+  document.getElementById("status").value = draft.status || "";
+  document.getElementById("assignedTo").value = draft.assignedTo || "";
+}
+
+document.getElementById("taskForm").addEventListener("input", () => {
+  saveDraft();
+});
 
 // ====================== FILTERS ======================
 function applyFilters() {
   loadTasks(1);
 }
 
-function resetFilters() {
-  document.getElementById('searchInput').value = '';
-  document.getElementById('statusFilter').value = '';
-  document.getElementById('priorityFilter').value = '';
-  loadTasks(1);
-}
-
-// ====================== AUTO SAVE DRAFT ======================
-function setupAutoSave() {
-  const form = document.getElementById('taskForm');
-  if (!form) return;
+  await axios.post(
+    "http://localhost:5000/api/tasks",
+    {
+      title: document.getElementById("title").value,
+      priority: document.getElementById("priority").value,
+      status: document.getElementById("status").value,
+      assignedTo: document.getElementById("assignedTo").value,
+      project: projectId,
+    },
+    {
+      headers: { Authorization: `Bearer ${token}` },
+    }
+  );
+  localStorage.removeItem(draftKey);
+  document.getElementById("taskForm").reset();
 
   ['taskTitle', 'taskDescription', 'priority', 'taskDueDate'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.addEventListener('input', saveDraft);
   });
   loadDraft();
-}
+
 
 function saveDraft() {
   const draft = {
@@ -190,27 +234,7 @@ async function updateStatus(taskId, status) {
   }
 }
 
-async function assignTaskToUser(taskId, userId) {
-  try {
-    await axios.patch(`http://localhost:5000/api/tasks/${taskId}/assign`, { assignedTo: userId || null });
-    loadTasks(currentPage);
-  } catch (err) {
-    alert("Erreur lors de l'assignation");
-  }
-}
-
-async function deleteTask(taskId) {
-  if (!confirm('Supprimer cette tâche ?')) return;
-  try {
-    await axios.delete(`http://localhost:5000/api/tasks/${taskId}`);
-    loadTasks(currentPage);
-  } catch (err) {
-    alert('Erreur lors de la suppression');
-  }
-}
-
-window.logout = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  window.location.href = 'login.html';
-};
+// Lancer au chargement
+loadMembers();
+loadTasks();
+restoreDraft();
